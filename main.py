@@ -1,10 +1,9 @@
-
-
 # main.py
 import pygame
 import time
 import sys
 import ctypes
+import os # Necesario para buscar archivos
 
 try:
     ctypes.windll.user32.SetProcessDPIAware()
@@ -14,6 +13,7 @@ from config import *
 from midi_handler import MidiLoader
 from input_handler import KeyboardInput
 
+# --- CLASE NOTA ---
 class FallingNote:
     def __init__(self, note_data, speed_factor):
         self.name = note_data['note_name']
@@ -22,11 +22,9 @@ class FallingNote:
         self.speed_factor = speed_factor
         self.key_label = MIDI_TO_KEY_LABEL.get(self.val, "?")
         
-        # Spawn: Aparece arriba del todo (-50px)
         relative_pos = self.val - START_NOTE
         self.x = (relative_pos * (SCREEN_WIDTH / TOTAL_KEYS))
         self.y = -50 
-        
         self.color = CYAN if self.is_sharp else GREEN
         self.active = True 
 
@@ -44,19 +42,86 @@ class FallingNote:
         text_x = self.x + (rect.width // 2) - (text.get_width() // 2)
         surface.blit(text, (text_x, self.y + 2))
 
-def show_menu(screen, font_title, font_opt):
+# --- FUNCIONES DE SISTEMA ---
+
+def scan_songs():
+    """Busca subcarpetas dentro de 'canciones/' que tengan un archivo .mid"""
+    available_songs = []
+    
+    # Si la carpeta no existe, la creamos y avisamos
+    if not os.path.exists(SONGS_FOLDER):
+        os.makedirs(SONGS_FOLDER)
+        print(f"📁 Carpeta '{SONGS_FOLDER}' creada. Coloca tus canciones ahí.")
+        return []
+
+    # Escanear carpetas
+    for item in os.listdir(SONGS_FOLDER):
+        path = os.path.join(SONGS_FOLDER, item)
+        if os.path.isdir(path):
+            # Verificamos si tiene el MIDI obligatorio
+            if "cancion.mid" in os.listdir(path):
+                available_songs.append(item)
+    
+    return available_songs
+
+def select_song_menu(screen, font_title, font_list):
+    """Muestra lista de canciones encontradas"""
+    songs = scan_songs()
+    
+    if not songs:
+        # Pantalla de error si no hay canciones
+        screen.fill(BLACK)
+        text = font_list.render(f"No hay canciones en '{SONGS_FOLDER}/'", True, RED)
+        screen.blit(text, (50, 300))
+        pygame.display.flip()
+        time.sleep(3)
+        return None
+
+    selected_index = 0
+    chosen_song = None
+    
+    while chosen_song is None:
+        screen.fill(BLACK)
+        title = font_title.render("Elige una Canción", True, YELLOW)
+        screen.blit(title, (SCREEN_WIDTH//2 - title.get_width()//2, 50))
+        
+        # Dibujar lista
+        for i, song_name in enumerate(songs):
+            color = GREEN if i == selected_index else WHITE
+            prefix = "> " if i == selected_index else "  "
+            
+            text = font_list.render(f"{prefix}{song_name}", True, color)
+            screen.blit(text, (100, 150 + (i * 50)))
+            
+        help_txt = font_list.render("[Flechas] Mover  -  [Enter] Seleccionar", True, GRAY)
+        screen.blit(help_txt, (100, SCREEN_HEIGHT - 100))
+        
+        pygame.display.flip()
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit(); sys.exit()
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_UP:
+                    selected_index = max(0, selected_index - 1)
+                elif event.key == pygame.K_DOWN:
+                    selected_index = min(len(songs) - 1, selected_index + 1)
+                elif event.key == pygame.K_RETURN or event.key == pygame.K_KP_ENTER:
+                    chosen_song = songs[selected_index]
+
+    return chosen_song
+
+def show_difficulty_menu(screen, font_title, font_opt):
     selected_speed = None
     while selected_speed is None:
         screen.fill(BLACK)
-        title = font_title.render("PyAno Hero", True, YELLOW)
-        subtitle = font_opt.render("Selecciona Dificultad:", True, WHITE)
+        title = font_title.render("Velocidad", True, YELLOW)
         opt1 = font_opt.render("[1] Normal (1.0x)", True, GREEN)
         opt2 = font_opt.render("[2] Fácil   (0.75x)", True, CYAN)
         
         screen.blit(title, (SCREEN_WIDTH//2 - title.get_width()//2, 150))
-        screen.blit(subtitle, (SCREEN_WIDTH//2 - subtitle.get_width()//2, 300))
-        screen.blit(opt1, (SCREEN_WIDTH//2 - opt1.get_width()//2, 400))
-        screen.blit(opt2, (SCREEN_WIDTH//2 - opt2.get_width()//2, 450))
+        screen.blit(opt1, (SCREEN_WIDTH//2 - opt1.get_width()//2, 300))
+        screen.blit(opt2, (SCREEN_WIDTH//2 - opt2.get_width()//2, 400))
         pygame.display.flip()
 
         for event in pygame.event.get():
@@ -67,53 +132,62 @@ def show_menu(screen, font_title, font_opt):
                 elif event.key == pygame.K_2 or event.key == pygame.K_KP2: selected_speed = 0.75
     return selected_speed
 
+# --- JUEGO PRINCIPAL ---
 def main():
     pygame.init()
     pygame.mixer.init()
 
     screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-    pygame.display.set_caption("🎹 PyAno Hero - AutoSync")
+    pygame.display.set_caption("🎹 PyAno Hero - Song Selector")
     
     font_notes = pygame.font.SysFont("Arial", 11, bold=True) 
     font_keys = pygame.font.SysFont("Arial", 14, bold=True)
     font_score = pygame.font.SysFont("Arial", 30, bold=True)
-    font_menu_big = pygame.font.SysFont("Arial", 80, bold=True)
-    font_menu_opt = pygame.font.SysFont("Arial", 40)
+    font_big = pygame.font.SysFont("Arial", 60, bold=True)
+    font_med = pygame.font.SysFont("Arial", 30)
 
-    # 1. MENU
-    current_speed = show_menu(screen, font_menu_big, font_menu_opt)
+    # 1. SELECCIONAR CANCIÓN
+    song_folder_name = select_song_menu(screen, font_big, font_med)
+    if not song_folder_name: return # Si cerró o falló
+
+    # 2. SELECCIONAR DIFICULTAD
+    current_speed = show_difficulty_menu(screen, font_big, font_med)
     
-    # 2. CARGA DE DATOS
-    loader = MidiLoader("cancion.mid", speed_factor=current_speed)
+    # 3. CONSTRUIR RUTAS DE ARCHIVOS
+    # Ahora las rutas dependen de la carpeta elegida
+    base_path = os.path.join(SONGS_FOLDER, song_folder_name)
+    midi_path = os.path.join(base_path, "cancion.mid")
+    wav_path = os.path.join(base_path, f"cancion_{current_speed}.wav")
+    
+    print(f"📂 Cargando desde: {base_path}")
+
+    # 4. CARGA DE DATOS
+    loader = MidiLoader(midi_path, speed_factor=current_speed)
     all_notes = loader.parse_midi()
     if not all_notes: return
 
-    audio_filename = f"cancion_{current_speed}.wav"
     try:
-        pygame.mixer.music.load(audio_filename)
+        pygame.mixer.music.load(wav_path)
         pygame.mixer.music.set_volume(0.5)
     except pygame.error as e:
         print(f"❌ Error audio: {e}")
+        print(f"   Buscaba: {wav_path}")
 
-    # 3. CÁLCULO FÍSICO DE CAÍDA (LA MAGIA MATEMÁTICA) 🧮
-    # Calculamos exactamente cuánto tarda una nota en caer desde Y=-50 hasta la línea roja
-    pixels_to_travel = (SCREEN_HEIGHT - PIANO_HEIGHT) - (-50) # Distancia total
+    # 5. CÁLCULO FÍSICO
+    pixels_to_travel = (SCREEN_HEIGHT - PIANO_HEIGHT) - (-50)
     pixels_per_frame = BASE_NOTE_SPEED * current_speed
-    frames_to_fall = pixels_to_travel / pixels_per_frame
-    
-    # Convertimos frames a segundos (asumiendo 60 FPS)
-    time_to_fall = frames_to_fall / 60.0
-    print(f"⏱️ Tiempo de caída calculado: {time_to_fall:.2f} segundos")
+    time_to_fall = (pixels_to_travel / pixels_per_frame) / 60.0
+    print(f"⏱️ Tiempo de caída: {time_to_fall:.2f}s")
 
-    # 4. CUENTA REGRESIVA
+    # 6. CUENTA REGRESIVA
     for i in range(3, 0, -1):
         screen.fill(BLACK)
-        text = font_menu_big.render(str(i), True, WHITE)
+        text = font_big.render(str(i), True, WHITE)
         screen.blit(text, (SCREEN_WIDTH//2 - 20, SCREEN_HEIGHT//2 - 50))
         pygame.display.flip()
         time.sleep(1)
 
-    # 5. INICIO SINCRONIZADO
+    # 7. INICIO DE JUEGO
     input_handler = KeyboardInput()
     falling_notes = []
     
@@ -121,11 +195,7 @@ def main():
     combo = 0
     max_combo = 0
     
-    # IMPORTANTE: No damos Play todavía.
     music_started = False
-    
-    # Definimos el tiempo de inicio en el FUTURO.
-    # El juego "empieza" ahora, pero la música (tiempo 0.0) será en 'time_to_fall' segundos.
     real_start_time = time.time() + time_to_fall
     
     note_index = 0 
@@ -135,17 +205,13 @@ def main():
     while running:
         screen.fill(BLACK)
         
-        # song_time será negativo al principio (mientras caen las primeras notas)
-        # y se volverá positivo (0.0) justo cuando la primera nota toque la línea.
         current_time = time.time()
         song_time = current_time - real_start_time
 
-        # --- GESTOR DE AUDIO ---
-        # Si el tiempo de la canción llegó a 0.0 y no ha sonado, DALE PLAY
+        # GESTOR DE AUDIO
         if song_time >= 0 and not music_started:
             try:
                 pygame.mixer.music.play()
-                print("🎵 ¡Música Iniciada! Sincronización exacta.")
                 music_started = True
             except: pass
 
@@ -156,21 +222,16 @@ def main():
         input_handler.process_events(events)
         user_pressed_notes = input_handler.get_pressed_notes()
 
-        # --- SPAWN DE NOTAS (PREDICCIÓN) ---
-        # Aquí miramos hacia el futuro. Si la canción va por el segundo -2.0,
-        # necesitamos spawnear la nota que en el MIDI está marcada como 0.0
-        # Formula: Spawn si (MidiTime <= SongTime + TimeToFall)
+        # SPAWN
         spawn_threshold = song_time + time_to_fall
-        
         while note_index < len(all_notes) and all_notes[note_index]['spawn_time'] <= spawn_threshold:
             new_note_data = all_notes[note_index]
             if START_NOTE <= new_note_data['midi_val'] <= END_NOTE:
                 falling_notes.append(FallingNote(new_note_data, current_speed))
             note_index += 1
 
-        # --- LOGICA DE JUEGO ---
+        # LOGICA
         hit_line_y = SCREEN_HEIGHT - PIANO_HEIGHT
-        
         for note in falling_notes:
             if note.active:
                 if hit_line_y - 20 < note.y < hit_line_y + 30:
@@ -180,7 +241,7 @@ def main():
                         if combo > max_combo: max_combo = combo
                         score += 10 + (combo * 2)
 
-        # --- DIBUJAR ---
+        # DIBUJAR
         pygame.draw.rect(screen, GRAY, (0, SCREEN_HEIGHT - PIANO_HEIGHT, SCREEN_WIDTH, PIANO_HEIGHT))
         pygame.draw.line(screen, RED, (0, SCREEN_HEIGHT - PIANO_HEIGHT), (SCREEN_WIDTH, SCREEN_HEIGHT - PIANO_HEIGHT), 3)
 
@@ -213,7 +274,6 @@ def main():
 
         score_text = font_score.render(f"Puntos: {score}", True, WHITE)
         screen.blit(score_text, (20, 20))
-        
         combo_color = GREEN if combo < 10 else (CYAN if combo < 20 else YELLOW)
         if combo > 1:
             combo_text = font_score.render(f"COMBO x{combo}", True, combo_color)
@@ -222,7 +282,6 @@ def main():
         pygame.display.flip()
         clock.tick(60) 
 
-    print(f"Juego Terminado. Puntaje Final: {score}")
     pygame.quit()
 
 if __name__ == "__main__":

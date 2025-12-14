@@ -6,8 +6,15 @@ import pygame
 #convertir de mp3 a wav https://convertio.co/es/download/a7c44b1b0ffabf0c161f0e59a2b5bde4afd7f4/
 #https://onlinesequencer.net/4782252
 
-#cambiar velocidad https://audioalter.com/change-speed
+#cambiar velocidad https://audioalter.com/tempo
 #https://mp3cut.net/es/change-speed
+
+#paso 1: https://bitmidi.com/beethoven-symphony9-4-ode-to-joy-piano-solo-mid descargar el midi
+#paso 2: convertir el midi a mp3 https://tuneonmusic.com/music-tools/midi-to-audio/ 
+#paso 3: convertir el mp3 a wav  https://convertio.co/es/download/ed86181f922e1a2f81bb55de48e0474ffbf917/ 
+#paso 4: cambiar la velocidad del wav a 0.75  https://audioalter.com/tempo
+
+SONGS_FOLDER = "canciones"
 
 # --- PANTALLA ---
 SCREEN_WIDTH = 1280
@@ -41,6 +48,7 @@ KEY_MAPPING = {
     # === OCTAVA 1 (CENTRAL) ===
     # Ubicación: Fila Superior (QWERTY) + Números
     # Ideal para mano izquierda
+    
     pygame.K_q: 60, # DO
     pygame.K_2: 61, # DO#
     pygame.K_w: 62, # RE
