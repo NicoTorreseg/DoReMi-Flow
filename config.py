@@ -44,11 +44,9 @@ TOTAL_KEYS = END_NOTE - START_NOTE
 GLOBAL_OFFSET = 0
 
 # --- MAPEO DE TECLAS (DOBLE PISO) ---
+# Esto se mantiene igual para que puedas seguir usando el teclado de PC si quieres
 KEY_MAPPING = {
     # === OCTAVA 1 (CENTRAL) ===
-    # Ubicación: Fila Superior (QWERTY) + Números
-    # Ideal para mano izquierda
-    
     pygame.K_q: 60, # DO
     pygame.K_2: 61, # DO#
     pygame.K_w: 62, # RE
@@ -63,15 +61,13 @@ KEY_MAPPING = {
     pygame.K_u: 71, # SI
 
     # === OCTAVA 2 (AGUDA) ===
-    # Ubicación: Fila Inferior (ZXCV) + Fila Media (ASDF)
-    # Ideal para mano derecha. Sigue la misma lógica visual.
-    pygame.K_z: 72, # DO (Antes era la 'I')
-    pygame.K_s: 73, # DO# (Tecla negra sobre DO y RE)
+    pygame.K_z: 72, # DO
+    pygame.K_s: 73, # DO#
     pygame.K_x: 74, # RE
     pygame.K_d: 75, # RE#
     pygame.K_c: 76, # MI
     pygame.K_v: 77, # FA
-    pygame.K_g: 78, # FA# (Saltamos la F porque entre Mi y Fa no hay negra)
+    pygame.K_g: 78, # FA#
     pygame.K_b: 79, # SOL
     pygame.K_h: 80, # SOL#
     pygame.K_n: 81, # LA
@@ -79,23 +75,24 @@ KEY_MAPPING = {
     pygame.K_m: 83, # SI
 }
 
-# --- DICCIONARIO VISUAL ---
+# --- DICCIONARIO VISUAL (ESTETICA MUSICAL) ---
+# Aquí cambiamos las letras Q, W, E... por DO, RE, MI...
 MIDI_TO_KEY_LABEL = {
-    # Octava 1
-    60: "Q", 61: "2", 
-    62: "W", 63: "3", 
-    64: "E", 
-    65: "R", 66: "5", 
-    67: "T", 68: "6", 
-    69: "Y", 70: "7", 
-    71: "U",
+    # Octava 1 (Antes QWERTY)
+    60: "DO", 61: "DO#", 
+    62: "RE", 63: "RE#", 
+    64: "MI", 
+    65: "FA", 66: "FA#", 
+    67: "SOL", 68: "SOL#", 
+    69: "LA", 70: "LA#", 
+    71: "SI",
     
-    # Octava 2
-    72: "Z", 73: "S", 
-    74: "X", 75: "D", 
-    76: "C", 
-    77: "V", 78: "G", 
-    79: "B", 80: "H", 
-    81: "N", 82: "J", 
-    83: "M"
+    # Octava 2 (Antes ZXCV)
+    72: "DO", 73: "DO#", 
+    74: "RE", 75: "RE#", 
+    76: "MI", 
+    77: "FA", 78: "FA#", 
+    79: "SOL", 80: "SOL#", 
+    81: "LA", 82: "LA#", 
+    83: "SI"
 }
