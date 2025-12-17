@@ -18,81 +18,70 @@ SONGS_FOLDER = "canciones"
 
 # --- PANTALLA ---
 SCREEN_WIDTH = 1280
-SCREEN_HEIGHT = 720  
+SCREEN_HEIGHT = 720
+# --- CAMBIO 1: PIANO MÁS GRANDE ---
+PIANO_HEIGHT = 180 
+BASE_NOTE_SPEED = 6 
 
-PIANO_HEIGHT = 150
-BASE_NOTE_SPEED = 5 
+# --- JUGABILIDAD ---
+HIT_WINDOW = 70 
 
-# --- COLORES ---
+# --- COLORES BÁSICOS ---
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 GRAY = (50, 50, 50)
 GREEN = (0, 255, 0)     
 CYAN = (0, 200, 255)    
 RED = (255, 0, 0)       
-YELLOW = (255, 200, 0)  
+YELLOW = (255, 200, 0)
+
+# --- COLORES ESTILO NEON ---
+BACKGROUND_COLOR = (20, 20, 30) 
+PIANO_BG = (10, 10, 10)
+HIT_LINE_COLOR = (255, 50, 80) 
+
+# Teclas del Piano
+WHITE_KEY_COLOR = (240, 240, 240)
+BLACK_KEY_COLOR = (40, 40, 50)
+KEY_ACTIVE_COLOR = (255, 200, 50) # Dorado al tocar
+KEY_TOLERANCE_COLOR = (255, 100, 0) 
+
+# --- CAMBIO 2: COLORES DIFERENCIADOS PARA NOTAS QUE CAEN ---
+# Cyan fuerte para naturales, Violeta fuerte para sostenidos
+NOTE_WHITE_COLOR = (0, 255, 255)   
+NOTE_BLACK_COLOR = (200, 0, 255)   
+TEXT_COLOR = (0, 0, 0) # Texto negro para contraste máximo
 
 # --- AUDIO & NOTAS ---
 NOTE_NAMES = ["DO", "DO#", "RE", "RE#", "MI", "FA", "FA#", "SOL", "SOL#", "LA", "LA#", "SI"]
 
-# Rango: 2 Octavas exactas (12 + 12 = 24 notas)
-# Empieza en DO Central (60) y termina justo al final de la segunda octava
 START_NOTE = 48 
 END_NOTE = 84   
 TOTAL_KEYS = END_NOTE - START_NOTE
 
 GLOBAL_OFFSET = 0
 
-# --- MAPEO DE TECLAS (DOBLE PISO) ---
-# Esto se mantiene igual para que puedas seguir usando el teclado de PC si quieres
-KEY_MAPPING = {
-    # === OCTAVA 1 (CENTRAL) ===
-    pygame.K_q: 60, # DO
-    pygame.K_2: 61, # DO#
-    pygame.K_w: 62, # RE
-    pygame.K_3: 63, # RE#
-    pygame.K_e: 64, # MI
-    pygame.K_r: 65, # FA
-    pygame.K_5: 66, # FA#
-    pygame.K_t: 67, # SOL
-    pygame.K_6: 68, # SOL#
-    pygame.K_y: 69, # LA
-    pygame.K_7: 70, # LA#
-    pygame.K_u: 71, # SI
+# --- ETIQUETAS DE TEXTO (DO, RE, MI...) ---
+MIDI_TO_KEY_LABEL = {
+    # === OCTAVA BAJA (C3 - MIDI 48-59) === <--- ESTO FALTABA
+    48: "DO", 49: "DO#", 50: "RE", 51: "RE#", 52: "MI", 53: "FA", 54: "FA#",
+    55: "SOL", 56: "SOL#", 57: "LA", 58: "LA#", 59: "SI",
 
-    # === OCTAVA 2 (AGUDA) ===
-    pygame.K_z: 72, # DO
-    pygame.K_s: 73, # DO#
-    pygame.K_x: 74, # RE
-    pygame.K_d: 75, # RE#
-    pygame.K_c: 76, # MI
-    pygame.K_v: 77, # FA
-    pygame.K_g: 78, # FA#
-    pygame.K_b: 79, # SOL
-    pygame.K_h: 80, # SOL#
-    pygame.K_n: 81, # LA
-    pygame.K_j: 82, # LA#
-    pygame.K_m: 83, # SI
+    # === OCTAVA CENTRAL (C4 - MIDI 60-71) ===
+    60: "DO", 61: "DO#", 62: "RE", 63: "RE#", 64: "MI", 65: "FA", 66: "FA#", 
+    67: "SOL", 68: "SOL#", 69: "LA", 70: "LA#", 71: "SI",
+    
+    # === OCTAVA ALTA (C5 - MIDI 72-83) ===
+    72: "DO", 73: "DO#", 74: "RE", 75: "RE#", 76: "MI", 77: "FA", 78: "FA#", 
+    79: "SOL", 80: "SOL#", 81: "LA", 82: "LA#", 83: "SI"
 }
 
-# --- DICCIONARIO VISUAL (ESTETICA MUSICAL) ---
-# Aquí cambiamos las letras Q, W, E... por DO, RE, MI...
-MIDI_TO_KEY_LABEL = {
-    # Octava 1 (Antes QWERTY)
-    60: "DO", 61: "DO#", 
-    62: "RE", 63: "RE#", 
-    64: "MI", 
-    65: "FA", 66: "FA#", 
-    67: "SOL", 68: "SOL#", 
-    69: "LA", 70: "LA#", 
-    71: "SI",
-    
-    # Octava 2 (Antes ZXCV)
-    72: "DO", 73: "DO#", 
-    74: "RE", 75: "RE#", 
-    76: "MI", 
-    77: "FA", 78: "FA#", 
-    79: "SOL", 80: "SOL#", 
-    81: "LA", 82: "LA#", 
-    83: "SI"
+# MAPEO TECLADO PC
+KEY_MAPPING = {
+    pygame.K_q: 60, pygame.K_2: 61, pygame.K_w: 62, pygame.K_3: 63,
+    pygame.K_e: 64, pygame.K_r: 65, pygame.K_5: 66, pygame.K_t: 67,
+    pygame.K_6: 68, pygame.K_y: 69, pygame.K_7: 70, pygame.K_u: 71,
+    pygame.K_z: 72, pygame.K_s: 73, pygame.K_x: 74, pygame.K_d: 75,
+    pygame.K_c: 76, pygame.K_v: 77, pygame.K_g: 78, pygame.K_b: 79,
+    pygame.K_h: 80, pygame.K_n: 81, pygame.K_j: 82, pygame.K_m: 83,
 }
